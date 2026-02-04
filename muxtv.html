@@ -90,6 +90,10 @@
     /* Hide control panel in fullscreen */
     body.panel-fullscreen #controlPanel { display: none; }
     body.panel-fullscreen #grid { margin-top: 0 !important; height: 100vh !important; }
+
+    /* Hide control panel in browser fullscreen */
+    body.browser-fullscreen #controlPanel { display: none; }
+    body.browser-fullscreen #grid { margin-top: 0 !important; height: 100vh !important; }
   </style>
 </head>
 <body class="text-gray-200">
@@ -664,6 +668,15 @@
         document.documentElement.requestFullscreen();
       }
     }
+
+    // Handle browser fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        document.body.classList.add('browser-fullscreen');
+      } else {
+        document.body.classList.remove('browser-fullscreen');
+      }
+    });
 
     // ESC key to exit panel fullscreen
     document.addEventListener('keydown', e => {
