@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UT - Main Web Site</title>
+    <style>
+        /* Print styles FIRST */
+        @media print {
+            body { font-size: 11pt; }
+            .no-print { display: none; }
+        }
+
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #c51a4a 0%, #7b1fa2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Main content */
+        main {
+            flex: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        /* Section */
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #c51a4a;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Card grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #c51a4a;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .card a {
+            display: inline-block;
+            color: #1565c0;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Links list */
+        .links-list {
+            list-style: none;
+        }
+
+        .links-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .links-list li:last-child {
+            border-bottom: none;
+        }
+
+        .links-list a {
+            color: #1565c0;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .links-list a:hover {
+            text-decoration: underline;
+        }
+
+        .links-list .desc {
+            color: #666;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Print button */
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #c51a4a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .print-btn:hover {
+            background: #a01540;
+        }
+    </style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
+
+<header>
+    <h1>UT</h1>
+    <p>Main Web Site</p>
+</header>
+
+<main>
+    <section>
+        <h2>Projects</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>Documentation</h3>
+                <p>Collection of technical documentation, guides, and reference materials.</p>
+                <a href="https://github.com/ugurtigli/ut-docs">View Docs Repository</a>
+            </div>
+            <div class="card">
+                <h3>OpenClaw</h3>
+                <p>OpenClaw configuration and customizations.</p>
+                <a href="https://github.com/ugurtigli/ut-openclaw">View Repository</a>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Live Streams</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>MuxTV</h3>
+                <p>Live streaming TV channels and media player.</p>
+                <a href="muxtv.html">Watch Now</a>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Quick Links</h2>
+        <ul class="links-list">
+            <li>
+                <a href="https://github.com/ugurtigli">GitHub Profile</a>
+                <div class="desc">All repositories and projects</div>
+            </li>
+            <li>
+                <a href="https://github.com/ugurtigli/ut-docs">Documentation Index</a>
+                <div class="desc">HTML and PDF documentation files</div>
+            </li>
+        </ul>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 UT. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
