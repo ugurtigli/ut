@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yapay Zeka, Veri ve Liderlik | RYLA 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e10;
+  --surface: #18181c;
+  --surface2: #222228;
+  --border: rgba(255,255,255,0.09);
+  --text: #f0ede8;
+  --muted: #b8b6c8;
+  --muted2: #787690;
+  --accent: #f5a623;
+  --green: #22c9a0;
+  --blue: #5b8ff0;
+  --red: #f56060;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* ── SHELL ── */
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── PROGRESS ── */
+.progress {
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 350ms cubic-bezier(.4,0,.2,1);
+}
+
+/* ── SLIDE AREA ── */
+.deck {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: 32px 48px 24px;
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.slide.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  animation: slideIn 320ms ease forwards;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── NAV ── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 48px 14px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+.nav-left { color: var(--muted); font-size: 0.82rem; letter-spacing: 0.04em; }
+.nav-right { display: flex; gap: 10px; align-items: center; }
+.counter { color: var(--muted); font-size: 0.82rem; min-width: 48px; text-align: center; }
+
+button {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  transition: background 150ms, border-color 150ms, opacity 150ms;
+}
+button:hover:not(:disabled) { background: var(--surface2); border-color: rgba(255,255,255,0.14); }
+button:disabled { opacity: 0.3; cursor: default; }
+button.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+button.primary:hover:not(:disabled) { background: #f0b840; border-color: #f0b840; }
+
+/* ── TYPOGRAPHY ── */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  max-width: 14ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+h3 {
+  font-family: var(--sans);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+p, li {
+  font-size: clamp(0.9rem, 1.25vw, 1.05rem);
+  line-height: 1.5;
+  color: var(--muted);
+}
+ul { padding-left: 1.2em; }
+li { margin-bottom: 5px; }
+strong { color: var(--text); font-weight: 600; }
+
+/* ── LAYOUT HELPERS ── */
+.cols {
+  display: grid;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.cols.c2 { grid-template-columns: 1fr 1fr; }
+.cols.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols.c4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.cols.c-wide { grid-template-columns: 1.3fr 0.7fr; }
+.cols.c-wide-r { grid-template-columns: 0.7fr 1.3fr; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.card.accent-top { border-top: 3px solid var(--accent); }
+.card.accent-green { border-top: 3px solid var(--green); }
+.card.accent-blue { border-top: 3px solid var(--blue); }
+
+.card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+}
+
+.big-number {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1;
+  color: var(--text);
+}
+
+/* ── HIGHLIGHT QUOTE ── */
+.highlight {
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  line-height: 1.2;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  background: rgba(245,166,35,0.07);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.96rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+/* ── STEP ── */
+.step-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ── BADGE ROW ── */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.badge {
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.badge.green { background: rgba(34,201,160,0.1); border-color: rgba(34,201,160,0.3); color: var(--green); }
+.badge.blue  { background: rgba(91,143,240,0.1);  border-color: rgba(91,143,240,0.3);  color: var(--blue); }
+.badge.amber { background: rgba(245,166,35,0.1);  border-color: rgba(245,166,35,0.3);  color: var(--accent); }
+.badge.red   { background: rgba(245,96,96,0.1);   border-color: rgba(245,96,96,0.3);   color: var(--red); }
+
+/* ── SEPARATOR ── */
+.sep { width: 48px; height: 2px; background: var(--accent); margin: 6px 0; border-radius: 2px; }
+
+/* ── SLIDE HEADER ── */
+.slide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+.slide-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+}
+
+/* ── FLOW ROW ── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+}
+.flow-item {
+  flex: 1;
+  text-align: center;
+  padding: 14px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+}
+.flow-arrow {
+  font-size: 1.2rem;
+  color: var(--muted2);
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+
+/* ── PILL LIST ── */
+.pill-list { display: flex; flex-direction: column; gap: 8px; }
+.pill-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.94rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.pill-item strong { color: var(--text); font-weight: 600; }
+.pill-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── FULL FILL ── */
+.fill-green { background: rgba(34,201,160,0.07); border-color: rgba(34,201,160,0.2); }
+.fill-blue  { background: rgba(91,143,240,0.07);  border-color: rgba(91,143,240,0.2); }
+.fill-amber { background: rgba(245,166,35,0.07);  border-color: rgba(245,166,35,0.2); }
+
+/* ── HERO STAT ── */
+.hero-stat {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.stat-item { display: flex; flex-direction: column; gap: 4px; }
+.stat-item .stat-val {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-item .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+/* ── SVG DIAGRAM ── */
+.diagram {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.diagram svg {
+  width: 100%;
+  height: 100%;
+  max-height: 360px;
+}
+
+/* ── AGENDA GRID ── */
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex: 1;
+}
+
+/* ── CLOSING GRID ── */
+.closing-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ── MINIO LOGO ── */
+.minio-logo svg {
+  width: auto;
+  height: 22px;
+  display: block;
+}
+.minio-logo-lg svg {
+  width: auto;
+  height: 32px;
+  display: block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  body, html { overflow: auto; }
+  .shell { height: auto; }
+  .deck { overflow: visible; height: auto; }
+  .slide { position: static; display: none; padding: 28px 24px 20px; opacity: 1; transform: none; animation: none; }
+  .slide.active { display: flex; }
+  .cols.c2, .cols.c3, .cols.c4, .cols.c-wide, .cols.c-wide-r { grid-template-columns: 1fr; }
+  .agenda-grid, .closing-cards { grid-template-columns: 1fr; }
+  .nav { padding: 14px 24px 18px; }
+  h1 { font-size: 2.4rem; }
+  h2 { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="progress"><div class="progress-fill" id="prog"></div></div>
+
+  <div class="deck" id="deck">
+
+    <!-- ── 1. AÇILIŞ ── -->
+    <section class="slide active" data-title="Açılış">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">RYLA 2026 · 27 Mart · 17:00</div>
+          <div class="slide-tag">1 / 12</div>
+        </div>
+        <div class="slide-tag" style="display:flex;align-items:center;gap:10px;">
+          Uğur Tığlı · CTO,&nbsp;
+          <span class="minio-logo"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1; min-height:0;">
+
+        <!-- LEFT: stacked top-to-bottom, no gaps -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <div class="eyebrow">Konuşma başlığı</div>
+            <h1>Yapay Zekânın <em>Değerlendirme</em> ve Karar Verme Süreçleri Üzerindeki Etkisi</h1>
+            <div class="sep" style="margin-top:14px;"></div>
+            <p style="margin-top:12px; font-size:1.1rem; color:var(--text); line-height:1.55; max-width:36ch;">En temel haliyle AI, tekrar eden yapıları tanıyan bir sistemdir. Çok veri görür, olasılık hesaplar, en muhtemel cevabı üretir.</p>
+          </div>
+          <div class="card" style="flex:1; justify-content:space-between;">
+            <div>
+              <div class="card-label" style="margin-bottom:10px;">Konuşma kapsamı</div>
+              <div class="badges">
+                <span class="badge amber">İstatistik</span>
+                <span class="badge blue">Bilgisayar bilimi</span>
+                <span class="badge green">Veri depolama</span>
+                <span class="badge">İnsan liderliği</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:32px; margin-top:20px;">
+              <div class="stat-item"><div class="stat-val">12</div><div class="stat-label">slayt</div></div>
+              <div class="stat-item"><div class="stat-val">20'</div><div class="stat-label">altında</div></div>
+              <div class="stat-item"><div class="stat-val">1</div><div class="stat-label">temel soru</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: full-height SVG diagram with big nodes -->
+        <div style="display:flex; flex-direction:column; gap:10px; min-height:0;">
+          <div style="flex:1; min-height:0;">
+          <svg viewBox="0 0 480 420" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+
+            <!-- Connector lines -->
+            <line x1="160" y1="110" x2="210" y2="178" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="320" y1="110" x2="270" y2="178" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="210" y1="268" x2="160" y2="340" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="270" y1="268" x2="320" y2="340" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+
+            <!-- AI — centre, large -->
+            <rect x="170" y="178" width="140" height="90" rx="18" fill="#f5a623" fill-opacity="0.15" stroke="#f5a623" stroke-width="2"/>
+            <text x="240" y="215" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="700" fill="#f5a623">AI</text>
+            <text x="240" y="236" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#b8b6c8">tekrar eden yapıları</text>
+            <text x="240" y="252" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#b8b6c8">tanır</text>
+
+            <!-- İnsan — top left -->
+            <rect x="30" y="30" width="150" height="80" rx="14" fill="#18181c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            <text x="105" y="62" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#f0ede8">İnsan</text>
+            <text x="105" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">amaç koyar</text>
+
+            <!-- Veri — top right -->
+            <rect x="300" y="30" width="150" height="80" rx="14" fill="#18181c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            <text x="375" y="62" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#f0ede8">Veri</text>
+            <text x="375" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">ham madde</text>
+
+            <!-- MinIO — bottom left -->
+            <rect x="30" y="340" width="150" height="88" rx="14" fill="#18181c" stroke="rgba(34,201,160,0.35)" stroke-width="1.5"/>
+            <image x="44" y="356" width="122" height="20"
+              href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 162.612 24.465'%3E%3Cpath d='M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z' fill='%23c72c48'/%3E%3C/svg%3E"/>
+            <text x="105" y="412" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">veriyi erişilebilir tutar</text>
+
+            <!-- Liderlik — bottom right -->
+            <rect x="300" y="340" width="150" height="88" rx="14" fill="#18181c" stroke="rgba(91,143,240,0.35)" stroke-width="1.5"/>
+            <text x="375" y="376" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#5b8ff0">Liderlik</text>
+            <text x="375" y="400" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">kararı taşır</text>
+          </svg>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 2. GÜNDEM ── -->
+    <section class="slide" data-title="Gündem">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Bağlam · 27 Mart 2026</div>
+          <h2>Bu Konuşma Gündemin Tam Ortasında</h2>
+        </div>
+        <div class="slide-tag">2 / 12</div>
+      </div>
+      <div class="agenda-grid">
+        <div class="card">
+          <div class="badge amber" style="width:fit-content;">10:10</div>
+          <h3>AI ile Çalışmak</h3>
+          <p>Yeni düşünme ve üretim biçimleri</p>
+        </div>
+        <div class="card">
+          <div class="badge blue" style="width:fit-content;">11:20</div>
+          <h3>Hukuk ve Etik</h3>
+          <p>Güç varsa sorumluluk da var</p>
+        </div>
+        <div class="card">
+          <div class="badge green" style="width:fit-content;">15:50</div>
+          <h3>İnsan Liderliği</h3>
+          <p>Araç AI olabilir, yön veren insan kalır</p>
+        </div>
+        <div class="card fill-amber" style="grid-column:span 2;">
+          <div class="badge amber" style="width:fit-content;">17:00 — Bugün</div>
+          <h3>Muhakeme, Karar Verme, Veri ve Uygulama</h3>
+          <p>Tek soru: <strong>AI kararlarımızı nasıl etkiliyor?</strong> Ve kariyer başlangıcında ne öğrenmeli?</p>
+        </div>
+        <div class="card">
+          <div class="badge" style="width:fit-content;">28–29 Mart</div>
+          <h3>Geleceği Şekillendirmek</h3>
+          <p>Güvenli gelecek, iş görüşmeleri, yaratıcılık</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. AI NEDİR ── -->
+    <section class="slide" data-title="AI Nedir?">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Temel · En başa dönelim</div>
+          <h2>AI Bir Tahmin Motorudur</h2>
+        </div>
+        <div class="slide-tag">3 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="callout">Telefon klavyenizin sonraki kelimeyi önermesi, Spotify'ın şarkı tavsiye etmesi, bankanın şüpheli işlemi flaglemesi — aynı ailenin problemleridir.</div>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Girdi görür:</strong> metin, görüntü, ses, sensör verisi</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Yapıları çıkarır:</strong> geçmiş örneklerden benzerlik öğrenir</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Çıktı üretir:</strong> en muhtemel sonucu döndürür</div></div>
+          </div>
+          <div class="card" style="background:var(--surface2);">
+            <div class="card-label">Günlük hayat</div>
+            <p style="font-size:0.96rem;">AI çoğu zaman sizin yerinize düşünmez; hızlı bir <strong>ilk taslak</strong> verir.</p>
+          </div>
+        </div>
+        <div class="card" style="align-items:stretch; gap:18px;">
+          <div class="card-label">Yapı tanıma akışı</div>
+          <div class="flow" style="flex-direction:column; gap:10px;">
+            <div class="flow-item fill-amber" style="border-radius:14px;padding:16px;">
+              <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:4px;">GİRDİ</div>
+              <strong style="font-size:1rem;">Yazı · Ses · Resim</strong>
+            </div>
+            <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+            <div class="flow-item" style="background:#f5a623;border:none;border-radius:14px;padding:16px;">
+              <div style="font-size:0.75rem;color:rgba(0,0,0,0.5);margin-bottom:4px;">MODEL</div>
+              <strong style="font-size:1rem;color:#000;">Benzerlik öğrenir · Olasılık hesaplar</strong>
+            </div>
+            <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+            <div class="flow-item fill-green" style="border-radius:14px;padding:16px;">
+              <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:4px;">ÇIKTI</div>
+              <strong style="font-size:1rem;">Etiket · Öneri · Cevap</strong>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+            <span class="badge amber">Sınav sorusu</span>
+            <span class="badge blue">Spam filtresi</span>
+            <span class="badge green">Trafik tahmini</span>
+            <span class="badge">Chatbot</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. ÜÇ DİREK ── -->
+    <section class="slide" data-title="Üç Direk">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">İnşa · AI'nın bileşenleri</div>
+          <h2>Veri + İstatistik + Yazılım</h2>
+        </div>
+        <div class="slide-tag">4 / 12</div>
+      </div>
+      <div class="cols c3" style="flex:1;min-height:0;">
+        <div class="card accent-top">
+          <div class="big-number">01</div>
+          <h3>İstatistik</h3>
+          <p>Belirsizlikle başa çıkma sanatıdır. "Bu örnek önce gördüklerime ne kadar benziyor?" sorusunu yanıtlar.</p>
+          <div class="callout">Ortalama, dağılım, olasılık, hata payı: AI'nın matematik omurgası.</div>
+        </div>
+        <div class="card accent-green">
+          <div class="big-number">02</div>
+          <h3>Bilgisayar Bilimi</h3>
+          <p>Bu hesabı büyük ölçekte çalıştırır. Algoritma, veri yapıları, paralel hesaplama işin mühendisliğidir.</p>
+          <div class="callout">Aynı fikir, ama milyonlarca örnekte ve saniyeler içinde.</div>
+        </div>
+        <div class="card accent-blue">
+          <div class="big-number">03</div>
+          <h3>Veri</h3>
+          <p>Modelin gördüğü dünyanın kopyasıdır. Veri zayıfsa sonuç da zayıf olur; veri eksikse model körleşir.</p>
+          <div class="callout">"Garbage in, garbage out" sözü hâlâ geçerli.</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; align-items:center; gap:14px; padding:14px 20px; background:var(--surface); border:1px solid var(--border); border-radius:14px; flex-wrap:wrap;">
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">İstatistik</span>
+        <span style="color:var(--muted2);font-size:1.2rem;">+</span>
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">Bilgisayar</span>
+        <span style="color:var(--muted2);font-size:1.2rem;">+</span>
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">Veri</span>
+        <span style="color:var(--muted2);font-size:1.4rem;">=</span>
+        <span style="font-family:var(--serif);font-size:1.25rem;color:var(--accent);font-weight:700;">Çalışan AI Sistemi</span>
+      </div>
+    </section>
+
+    <!-- ── 5. NEDEN AKILLI GÖRÜNÜR ── -->
+    <section class="slide" data-title="Neden Akıllı Görünür?">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Soru · Peki neden zeki gibi?</div>
+          <h2>Cevap: Ölçek ve Tekrar</h2>
+        </div>
+        <div class="slide-tag">5 / 12</div>
+      </div>
+      <div class="cols c-wide" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <p style="font-size:1.05rem;color:var(--text);line-height:1.5;">Bir insanın bütün ömründe karşılaşamayacağı kadar çok örnek, saniyeler içinde modele gösterilir. Bu yüzden cevap bazen "bilgece" gelir.</p>
+          <div class="callout">Ama dikkat: çok örnek görmek, gerçek anlamda <strong>bilinç sahibi</strong> olmak demek değildir.</div>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Neden güçlü:</strong> hız, tekrar, ölçek</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div><strong>Neden riskli:</strong> özgüvenli yanlış cevap üretebilir</div></div>
+          </div>
+          <div class="card fill-amber">
+            <div class="card-label">Basit kural</div>
+            <p>Etkileyici cümle ≠ Her zaman sağlam muhakeme.</p>
+          </div>
+        </div>
+        <div class="card" style="gap:12px;">
+          <div class="card-label">Eğitimden yanıta giden yol</div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+            <div class="pill-item fill-amber" style="border-radius:12px;"><div class="pill-dot"></div><div><strong>Milyonlarca örnek</strong><br><span style="font-size:0.92rem;">kitaplar, resimler, loglar</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item" style="background:#5b8ff0;border-color:#5b8ff0;border-radius:12px;"><div style="width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0;margin-top:5px;"></div><div style="color:#fff;"><strong>Eğitim</strong><br><span style="font-size:0.92rem;opacity:0.8;">hataları azalt · yapıları sıkıştır</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item fill-green" style="border-radius:12px;"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Ağırlıklar</strong><br><span style="font-size:0.92rem;">öğrenilmiş sayılar</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item" style="border-radius:12px;"><div class="pill-dot" style="background:var(--red)"></div><div><strong>Yeni soru + Tahmin</strong><br><span style="font-size:0.92rem;">en muhtemel cevap döner</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 6. MUHAKEME VE KARAR ── -->
+    <section class="slide" data-title="Muhakeme ve Karar">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Kritik Ayrım · Tahmin başka, sorumluluk başka</div>
+          <h2>İnsan Karar Verir, Sonucu Sahiplenir</h2>
+        </div>
+        <div class="slide-tag">6 / 12</div>
+      </div>
+      <div class="cols c4" style="flex:1;min-height:0;">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">1</div>
+            <h3>Soruyu Çerçevele</h3>
+          </div>
+          <p>Ne istiyoruz? Hız mı, doğruluk mu, adalet mi, güvenlik mi?</p>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">2</div>
+            <h3>Tahmin Üret</h3>
+          </div>
+          <p>AI geçmişe bakarak olası cevabı çıkarır. <strong>Güçlü olduğu nokta burasıdır.</strong></p>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">3</div>
+            <h3>Muhakeme Et</h3>
+          </div>
+          <p>Bu cevap mevcut duruma, insana ve sonuca uygun mu? Yan etkisi var mı?</p>
+        </div>
+        <div class="card" style="border-color:var(--accent);">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">4</div>
+            <h3>Karar Ver ve Sahiplen</h3>
+          </div>
+          <p>İmza atacak olan, sonucu taşıyacak olan <strong>hâlâ insandır.</strong></p>
+        </div>
+      </div>
+      <div class="cols c2" style="margin-top:14px;">
+        <div class="card fill-amber">
+          <div class="card-label">AI'nın sık düştüğü çukur</div>
+          <p class="highlight" style="font-size:1.2rem;">"Benzer örnek buldum, o halde doğru cevabı biliyorum."</p>
+          <p style="font-size:0.94rem;">Bu yaklaşım hukukta, tıpta, işe alımda tek başına yeterli değildir.</p>
+        </div>
+        <div class="card fill-blue">
+          <div class="card-label">İnsanın görevi</div>
+          <p class="highlight" style="font-size:1.2rem;">"Cevap mantıklı mı, adil mi, zamanlaması doğru mu?"</p>
+          <p style="font-size:0.94rem;">Muhakeme; bağlam, değerler, amaç ve sorumluluk içerir.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 7. GÜNLÜK HAYAT ── -->
+    <section class="slide" data-title="Günlük Hayat">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Uygulama · Bugün ne yapabilirim?</div>
+          <h2>AI'yı Yardımcı Pilot Gibi Kullan</h2>
+        </div>
+        <div class="slide-tag">7 / 12</div>
+      </div>
+      <div class="cols c3" style="flex:1;min-height:0;">
+        <div class="card">
+          <h3>📚 Derslerde</h3>
+          <p>Özet çıkar, çalışma planı yazdır, karşı argüman üret, sana özel mini quiz tasarlat.</p>
+          <div class="callout">Son kontrolü sen yap: kaynakları gör, doğrula, anlayış kur.</div>
+        </div>
+        <div class="card">
+          <h3>🗂 Hayat Organizasyonu</h3>
+          <p>CV taslağı, e-posta taslağı, seyahat planı, bütçe tablosu, toplantı notu.</p>
+          <div class="callout">AI vakit kazandırır; hangi işi yapacağına karar vermek yine senin işindir.</div>
+        </div>
+        <div class="card">
+          <h3>✏️ Üretimde</h3>
+          <p>İçerik, kod, fikir geliştirme, sunum akışı, görsel taslak. Başlangıç eşiğini düşürür.</p>
+          <div class="callout">Hızlı diye kalitesiz işi yayınlama. <strong>Editör sensin.</strong></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:14px 20px;background:var(--surface);border:1px solid var(--accent);border-radius:16px;">
+        <strong>En iyi kullanım formülü:</strong> Sıfırdan yapmak yerine, <strong>ilk taslağı AI'ya verdirip kaliteyi sen yükselt.</strong> Hız + eleştirel düşünme = değer üretimi.
+      </div>
+    </section>
+
+    <!-- ── 8. NEDEN DEPOLAMA ── -->
+    <section class="slide" data-title="Veri Depolama">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">CTO Bakışı · Ben neden veri depolamadan söz ediyorum?</div>
+          <h2>AI Veri Olmadan Aç Kalır</h2>
+        </div>
+        <div class="slide-tag">8 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <span class="badge amber">Görüntü / Video</span>
+            <span class="badge blue">Log / Telemetri</span>
+            <span class="badge green">Doküman / PDF</span>
+            <span class="badge">Checkpoint</span>
+            <span class="badge">Embedding</span>
+            <span class="badge">Dataset Sürümleri</span>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--surface);border:1px solid rgba(34,201,160,0.25);border-radius:18px;">
+            <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <span class="minio-logo-lg"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+              <div style="color:var(--muted2);font-size:0.94rem;">AI veri katmanı</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="gap:16px;">
+          <h3>MinIO Ne Yapar?</h3>
+          <p>Büyük ölçekli <strong>nesne depolama</strong> yazılımıdır. Fotoğraflar, videolar, loglar, eğitim verisi, model checkpoint'leri ve embedding'leri hızlı ve güvenilir tutar.</p>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>S3 uyumlu erişim:</strong> standart bir dille her uygulamaya açılır</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Yüksek throughput:</strong> GPU'lar beklemeden çalışsın diye</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Dağıtık mimari:</strong> büyüdükçe tek makineye sıkışma</div></div>
+          </div>
+          <div class="callout">AI'nın benzini model değil, <strong>veridir.</strong> Verinin depolandığı yer stratejiktir.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 9. AI FABRİKALARI ── -->
+    <section class="slide" data-title="AI Fabrikaları">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Ekosistem · NVIDIA, Databricks ve benzeri yapılar</div>
+          <h2>Hızlı Compute Tek Başına Yetmez</h2>
+        </div>
+        <div class="slide-tag">9 / 12</div>
+      </div>
+      <div class="cols c-wide" style="flex:1;min-height:0;">
+        <div class="card" style="gap:12px;">
+          <div class="card-label">AI Factory mantığı</div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+            <div class="cols c3" style="gap:8px;">
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Uygulamalar</div>
+                <p style="font-size:0.92rem;">CRM, CMS, ERP, sensörler</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Veri Mühendisliği</div>
+                <p style="font-size:0.92rem;">Databricks, Spark, ETL</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">GPU Çiftliği</div>
+                <p style="font-size:0.92rem;">NVIDIA eğitim/çıkarım</p>
+              </div>
+            </div>
+            <div style="text-align:center;color:var(--muted);">↓ ↓ ↓</div>
+            <div style="padding:16px;background:rgba(34,201,160,0.08);border:1px solid rgba(34,201,160,0.25);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:14px;">
+              <span class="minio-logo"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+              <span style="color:var(--muted2);font-size:0.94rem;">Ortak Veri Düzlemi</span>
+            </div>
+            <div style="text-align:center;color:var(--muted);">↓ ↓ ↓</div>
+            <div class="cols c3" style="gap:8px;">
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Agent'lar</div>
+                <p style="font-size:0.92rem;">iş akışı, otomasyon</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Model Sürümü</div>
+                <p style="font-size:0.92rem;">versiyon, kayıt</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">RAG / Arama</div>
+                <p style="font-size:0.92rem;">doküman erişimi</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <p style="color:var(--text);font-size:1rem;line-height:1.5;">NVIDIA, Databricks ve kurumsal agent sistemleri aynı temel ihtiyaca dayanır: <strong>veri hızlı, sürekli ve güvenilir erişilebilir olmalı.</strong></p>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>GPU pahalıdır; veri geç gelirse yatırım boşa bekler</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>Model + dataset versiyonu birlikte yönetilmezse sonuç tekrar üretilemez</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>Güvenlik, erişim, yedek, performans aynı anda gerekir</div></div>
+          </div>
+          <div class="callout">Görünürde parlayan şey <strong>modeldir</strong>; perde arkasında işi taşıyan şey <strong>veri sistemidir.</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 10. BASİT HAYAT DERSİ ── -->
+    <section class="slide" data-title="Hayat Dersi">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Temel Mesaj · Her şeyi basitleştirelim</div>
+          <h2>Sistemler de İnsanlar Gibi Beslenir</h2>
+        </div>
+        <div class="slide-tag">10 / 12</div>
+      </div>
+      <div class="cols c2" style="flex:1;min-height:0;">
+        <div class="card fill-amber">
+          <div class="badge amber" style="width:fit-content;">AI için</div>
+          <p class="highlight">"İyi veri yoksa iyi sonuç da yok."</p>
+          <p>Yanlış veriyle eğitilmiş model, yanlış güven üretir.</p>
+          <div class="pill-list" style="margin-top:8px;">
+            <div class="pill-item"><div class="pill-dot"></div><div>Problemi önce tanımla</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>Doğru veriyi topla</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>Sonra aracı seç</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>En sonda çıktıyı insan gözüyle yargıla</div></div>
+          </div>
+        </div>
+        <div class="card fill-blue">
+          <div class="badge blue" style="width:fit-content;">İnsan için</div>
+          <p class="highlight">"İyi girdi yoksa iyi düşünce de zor çıkar."</p>
+          <p>Ne okuduğun, kiminle vakit geçirdiğin, neyi tekrar ettiğin senin kişisel veri setindir.</p>
+          <div class="pill-list" style="margin-top:8px;">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Kaliteli kaynak tüket</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Soruları daha iyi sormayı öğren</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Kararlarını veriyle destekle ama körleşme</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Hız ile derinliği birlikte geliştir</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 11. KARİYER ── -->
+    <section class="slide" data-title="Kariyer Başlangıcı">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Gelecek · Kariyer başlangıcında ne öğrenmeli?</div>
+          <h2>Prompt Sihri Değil, Yetenek Omurgası</h2>
+        </div>
+        <div class="slide-tag">11 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#000;font-weight:700;font-size:0.92rem;flex-shrink:0;">1</div>
+              <strong>Yazma</strong>
+            </div>
+            <p style="font-size:0.94rem;">Düşünceyi netleştirir, AI ile iletişimi güçlendirir</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:grid;place-items:center;color:#000;font-weight:700;font-size:0.92rem;flex-shrink:0;">2</div>
+              <strong>Temel Veri</strong>
+            </div>
+            <p style="font-size:0.94rem;">Tablo, grafik, olasılık, hata payı okuyabilmek</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">3</div>
+              <strong>Az Kod</strong>
+            </div>
+            <p style="font-size:0.94rem;">Otomasyon kurmak için yeterli düzeyde</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">4</div>
+              <strong>Alan Bilgisi</strong>
+            </div>
+            <p style="font-size:0.94rem;">Sağlık, finans, hukuk, medya — hangi sektör olursa</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--muted);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">5</div>
+              <strong>AI İş Akışına Entegrasyon</strong>
+            </div>
+            <p style="font-size:0.94rem;">Not alma, özet, taslak, araştırma</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <p style="font-size:1.05rem;color:var(--text);line-height:1.5;">Araç değişse bile yetenek tabanınız kalıcı olsun. Bu sizi sadece bugünün değil, önümüzdeki <strong>10 yılın</strong> iş dünyasına hazırlar.</p>
+          <div class="callout" style="font-size:1rem;">Değerli çalışan, AI'ı kullanan kişi değil; <strong>AI ile daha iyi sistem kuran kişidir.</strong></div>
+          <div class="card fill-green">
+            <div class="card-label">12 Aylık Öğrenme Omurgası</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="badge amber">Yazma</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge green">Veri</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge blue">Kod</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge">Alan bilgisi</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge amber">AI ustalığı</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 12. KAPANIŞ ── -->
+    <section class="slide" data-title="Kapanış">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Kapanış · Temele dön, sonra geleceğe bak</div>
+          <h2>Yapay Zekâ Geleceğiniz İçin Neden Önemli?</h2>
+        </div>
+        <div class="slide-tag">12 / 12</div>
+      </div>
+      <div class="closing-cards" style="flex:1;min-height:0;">
+        <div class="card fill-amber">
+          <h3>1. Çünkü her sektöre girecek</h3>
+          <p>AI sadece teknoloji şirketlerinin konusu değil; sağlık, finans, medya, üretim, eğitim hepsi dönüşecek.</p>
+        </div>
+        <div class="card fill-green">
+          <h3>2. Çünkü erken öğrenen avantajlı olacak</h3>
+          <p>Bugün küçük deneyler yapan biri, yarın ekip kuran ve yöneten kişi olabilir.</p>
+        </div>
+        <div class="card fill-blue">
+          <h3>3. Çünkü temel beceriler daha değerli olacak</h3>
+          <p>Soru sormak, doğrulamak, yazmak, bağlam kurmak ve sorumluluk almak daha kritik hâle gelecek.</p>
+        </div>
+        <div class="card" style="border-color:rgba(245,96,96,0.3);background:rgba(245,96,96,0.06);">
+          <h3>4. Çünkü veri yeni altyapıdır</h3>
+          <p>AI konuşulurken model öne çıkar; gerçekte <strong>veriyi yöneten sistemler</strong> oyunun merkezindedir.</p>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+        <p class="highlight" style="font-size:1.1rem;color:var(--text);">AI geleceği sizin yerinize kurmayacak. Ama onu doğru kullananlar, geleceği daha hızlı kuracak.</p>
+        <div style="font-family:var(--serif);font-size:1.1rem;color:var(--muted);white-space:nowrap;">Teşekkürler 🙏</div>
+      </div>
+    </section>
+
+  </div><!-- /deck -->
+
+  <nav class="nav">
+    <div class="nav-left" id="slideLabel">Açılış</div>
+    <div class="nav-right">
+      <button id="prev" type="button">← Geri</button>
+      <div class="counter" id="counter">1 / 12</div>
+      <button id="next" type="button" class="primary">İleri →</button>
+    </div>
+  </nav>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const prog = document.getElementById('prog');
+const counter = document.getElementById('counter');
+const label = document.getElementById('slideLabel');
+const prev = document.getElementById('prev');
+const next = document.getElementById('next');
+let cur = 0;
+
+function go(n) {
+  cur = Math.max(0, Math.min(n, slides.length - 1));
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === cur);
+  });
+  prog.style.width = ((cur + 1) / slides.length * 100) + '%';
+  counter.textContent = (cur + 1) + ' / ' + slides.length;
+  label.textContent = slides[cur].dataset.title || '';
+  prev.disabled = cur === 0;
+  next.disabled = cur === slides.length - 1;
+  document.title = (slides[cur].dataset.title || 'RYLA') + ' | Yapay Zeka 2026';
+}
+
+next.addEventListener('click', () => go(cur + 1));
+prev.addEventListener('click', () => go(cur - 1));
+
+document.addEventListener('keydown', e => {
+  if ([' ', 'ArrowRight', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  if (e.key === 'Home') go(0);
+  if (e.key === 'End') go(slides.length - 1);
+});
+
+// Swipe support
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+});
+
+go(0);
+</script>
+</body>
+</html>

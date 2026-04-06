@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI, Data, and Leadership | RYLA 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e10;
+  --surface: #18181c;
+  --surface2: #222228;
+  --border: rgba(255,255,255,0.09);
+  --text: #f0ede8;
+  --muted: #b8b6c8;
+  --muted2: #787690;
+  --accent: #f5a623;
+  --green: #22c9a0;
+  --blue: #5b8ff0;
+  --red: #f56060;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* ── SHELL ── */
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── PROGRESS ── */
+.progress {
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 350ms cubic-bezier(.4,0,.2,1);
+}
+
+/* ── SLIDE AREA ── */
+.deck {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: 32px 48px 24px;
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.slide.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  animation: slideIn 320ms ease forwards;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── NAV ── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 48px 14px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+.nav-left { color: var(--muted); font-size: 0.82rem; letter-spacing: 0.04em; }
+.nav-right { display: flex; gap: 10px; align-items: center; }
+.counter { color: var(--muted); font-size: 0.82rem; min-width: 48px; text-align: center; }
+
+button {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  transition: background 150ms, border-color 150ms, opacity 150ms;
+}
+button:hover:not(:disabled) { background: var(--surface2); border-color: rgba(255,255,255,0.14); }
+button:disabled { opacity: 0.3; cursor: default; }
+button.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+button.primary:hover:not(:disabled) { background: #f0b840; border-color: #f0b840; }
+
+/* ── TYPOGRAPHY ── */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  max-width: 14ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+h3 {
+  font-family: var(--sans);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+p, li {
+  font-size: clamp(0.9rem, 1.25vw, 1.05rem);
+  line-height: 1.5;
+  color: var(--muted);
+}
+ul { padding-left: 1.2em; }
+li { margin-bottom: 5px; }
+strong { color: var(--text); font-weight: 600; }
+
+/* ── LAYOUT HELPERS ── */
+.cols {
+  display: grid;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.cols.c2 { grid-template-columns: 1fr 1fr; }
+.cols.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols.c4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.cols.c-wide { grid-template-columns: 1.3fr 0.7fr; }
+.cols.c-wide-r { grid-template-columns: 0.7fr 1.3fr; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.card.accent-top { border-top: 3px solid var(--accent); }
+.card.accent-green { border-top: 3px solid var(--green); }
+.card.accent-blue { border-top: 3px solid var(--blue); }
+
+.card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+}
+
+.big-number {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1;
+  color: var(--text);
+}
+
+/* ── HIGHLIGHT QUOTE ── */
+.highlight {
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  line-height: 1.2;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  background: rgba(245,166,35,0.07);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.96rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+/* ── STEP ── */
+.step-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ── BADGE ROW ── */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.badge {
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.badge.green { background: rgba(34,201,160,0.1); border-color: rgba(34,201,160,0.3); color: var(--green); }
+.badge.blue  { background: rgba(91,143,240,0.1);  border-color: rgba(91,143,240,0.3);  color: var(--blue); }
+.badge.amber { background: rgba(245,166,35,0.1);  border-color: rgba(245,166,35,0.3);  color: var(--accent); }
+.badge.red   { background: rgba(245,96,96,0.1);   border-color: rgba(245,96,96,0.3);   color: var(--red); }
+
+/* ── SEPARATOR ── */
+.sep { width: 48px; height: 2px; background: var(--accent); margin: 6px 0; border-radius: 2px; }
+
+/* ── SLIDE HEADER ── */
+.slide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+.slide-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+}
+
+/* ── FLOW ROW ── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+}
+.flow-item {
+  flex: 1;
+  text-align: center;
+  padding: 14px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+}
+.flow-arrow {
+  font-size: 1.2rem;
+  color: var(--muted2);
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+
+/* ── PILL LIST ── */
+.pill-list { display: flex; flex-direction: column; gap: 8px; }
+.pill-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.94rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.pill-item strong { color: var(--text); font-weight: 600; }
+.pill-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── FULL FILL ── */
+.fill-green { background: rgba(34,201,160,0.07); border-color: rgba(34,201,160,0.2); }
+.fill-blue  { background: rgba(91,143,240,0.07);  border-color: rgba(91,143,240,0.2); }
+.fill-amber { background: rgba(245,166,35,0.07);  border-color: rgba(245,166,35,0.2); }
+
+/* ── HERO STAT ── */
+.hero-stat {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.stat-item { display: flex; flex-direction: column; gap: 4px; }
+.stat-item .stat-val {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-item .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+/* ── SVG DIAGRAM ── */
+.diagram {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.diagram svg {
+  width: 100%;
+  height: 100%;
+  max-height: 360px;
+}
+
+/* ── AGENDA GRID ── */
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex: 1;
+}
+
+/* ── CLOSING GRID ── */
+.closing-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ── MINIO LOGO ── */
+.minio-logo svg {
+  width: auto;
+  height: 22px;
+  display: block;
+}
+.minio-logo-lg svg {
+  width: auto;
+  height: 32px;
+  display: block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  body, html { overflow: auto; }
+  .shell { height: auto; }
+  .deck { overflow: visible; height: auto; }
+  .slide { position: static; display: none; padding: 28px 24px 20px; opacity: 1; transform: none; animation: none; }
+  .slide.active { display: flex; }
+  .cols.c2, .cols.c3, .cols.c4, .cols.c-wide, .cols.c-wide-r { grid-template-columns: 1fr; }
+  .agenda-grid, .closing-cards { grid-template-columns: 1fr; }
+  .nav { padding: 14px 24px 18px; }
+  h1 { font-size: 2.4rem; }
+  h2 { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="progress"><div class="progress-fill" id="prog"></div></div>
+
+  <div class="deck" id="deck">
+
+    <!-- ── 1. OPENING ── -->
+    <section class="slide active" data-title="Opening">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">RYLA 2026 · March 27 · 5:00 PM</div>
+          <div class="slide-tag">1 / 12</div>
+        </div>
+        <div class="slide-tag" style="display:flex;align-items:center;gap:10px;">
+          Uğur Tığlı · CTO,&nbsp;
+          <span class="minio-logo"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1; min-height:0;">
+
+        <!-- LEFT: stacked top-to-bottom, no gaps -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <div class="eyebrow">Talk title</div>
+            <h1>The Impact of Artificial Intelligence on <em>Evaluation</em> and Decision Making</h1>
+            <div class="sep" style="margin-top:14px;"></div>
+            <p style="margin-top:12px; font-size:1.1rem; color:var(--text); line-height:1.55; max-width:36ch;">At its core, AI is a system that recognizes recurring patterns. It sees a lot of data, calculates probabilities, and returns the most likely answer.</p>
+          </div>
+          <div class="card" style="flex:1; justify-content:space-between;">
+            <div>
+              <div class="card-label" style="margin-bottom:10px;">Talk scope</div>
+              <div class="badges">
+                <span class="badge amber">Statistics</span>
+                <span class="badge blue">Computer Science</span>
+                <span class="badge green">Data Storage</span>
+                <span class="badge">Human Leadership</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:32px; margin-top:20px;">
+              <div class="stat-item"><div class="stat-val">12</div><div class="stat-label">slides</div></div>
+              <div class="stat-item"><div class="stat-val">20'</div><div class="stat-label">under</div></div>
+              <div class="stat-item"><div class="stat-val">1</div><div class="stat-label">core question</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: full-height SVG diagram with big nodes -->
+        <div style="display:flex; flex-direction:column; gap:10px; min-height:0;">
+          <div style="flex:1; min-height:0;">
+          <svg viewBox="0 0 480 420" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+
+            <!-- Connector lines -->
+            <line x1="160" y1="110" x2="210" y2="178" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="320" y1="110" x2="270" y2="178" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="210" y1="268" x2="160" y2="340" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+            <line x1="270" y1="268" x2="320" y2="340" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+
+            <!-- AI — centre, large -->
+            <rect x="170" y="178" width="140" height="90" rx="18" fill="#f5a623" fill-opacity="0.15" stroke="#f5a623" stroke-width="2"/>
+            <text x="240" y="215" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="700" fill="#f5a623">AI</text>
+            <text x="240" y="236" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#b8b6c8">recurring patterns</text>
+            <text x="240" y="252" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#b8b6c8">recognizes</text>
+
+            <!-- Human — top left -->
+            <rect x="30" y="30" width="150" height="80" rx="14" fill="#18181c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            <text x="105" y="62" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#f0ede8">Human</text>
+            <text x="105" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">sets the intent</text>
+
+            <!-- Data — top right -->
+            <rect x="300" y="30" width="150" height="80" rx="14" fill="#18181c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            <text x="375" y="62" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#f0ede8">Data</text>
+            <text x="375" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">raw material</text>
+
+            <!-- MinIO — bottom left -->
+            <rect x="30" y="340" width="150" height="88" rx="14" fill="#18181c" stroke="rgba(34,201,160,0.35)" stroke-width="1.5"/>
+            <image x="44" y="356" width="122" height="20"
+              href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 162.612 24.465'%3E%3Cpath d='M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z' fill='%23c72c48'/%3E%3C/svg%3E"/>
+            <text x="105" y="412" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">keeps data accessible</text>
+
+            <!-- Liderlik — bottom right -->
+            <rect x="300" y="340" width="150" height="88" rx="14" fill="#18181c" stroke="rgba(91,143,240,0.35)" stroke-width="1.5"/>
+            <text x="375" y="376" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#5b8ff0">Leadership</text>
+            <text x="375" y="400" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#b8b6c8">carries the decision</text>
+          </svg>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 2. AGENDA ── -->
+    <section class="slide" data-title="Agenda">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Context · March 27, 2026</div>
+          <h2>This Talk Sits at the Center of the Agenda</h2>
+        </div>
+        <div class="slide-tag">2 / 12</div>
+      </div>
+      <div class="agenda-grid">
+        <div class="card">
+          <div class="badge amber" style="width:fit-content;">10:10</div>
+          <h3>Working with AI</h3>
+          <p>New thinking and production styles</p>
+        </div>
+        <div class="card">
+          <div class="badge blue" style="width:fit-content;">11:20</div>
+          <h3>Law and Ethics</h3>
+          <p>Where power exists, responsibility follows</p>
+        </div>
+        <div class="card">
+          <div class="badge green" style="width:fit-content;">15:50</div>
+          <h3>Human Leadership</h3>
+          <p>AI can be the tool, but humans keep steering</p>
+        </div>
+        <div class="card fill-amber" style="grid-column:span 2;">
+          <div class="badge amber" style="width:fit-content;">5:00 PM — Today</div>
+          <div class="badge amber" style="width:fit-content;">5:00 PM — Today</div>
+          <h3>Reasoning, Decision Making, Data, and Practice</h3>
+          <p>One question: <strong>How is AI shaping our decisions?</strong> And what should someone starting their career learn?</p>
+        </div>
+        <div class="card">
+          <div class="badge" style="width:fit-content;">28–29 Mart</div>
+          <h3>Shaping the Future</h3>
+          <p>Secure futures, interviews, creativity</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. WHAT IS AI ── -->
+    <section class="slide" data-title="What Is AI?">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Fundamentals · Back to the beginning</div>
+          <h2>AI Is a Prediction Engine</h2>
+        </div>
+        <div class="slide-tag">3 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="callout">Your phone keyboard suggesting the next word, Spotify recommending a song, and the bank flagging a suspicious transaction — they are variations of the same class of problems.</div>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Sees input:</strong> text, images, audio, sensor data</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Extracts patterns:</strong> learns similarities from past examples</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div><strong>Produces output:</strong> returns the most likely response</div></div>
+          </div>
+          <div class="card" style="background:var(--surface2);">
+            <div class="card-label">Everyday life</div>
+            <p style="font-size:0.96rem;">AI rarely thinks for you; it provides a quick <strong>first draft</strong>.</p>
+          </div>
+        </div>
+        <div class="card" style="align-items:stretch; gap:18px;">
+          <div class="card-label">Pattern recognition flow</div>
+          <div class="flow" style="flex-direction:column; gap:10px;">
+            <div class="flow-item fill-amber" style="border-radius:14px;padding:16px;">
+              <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:4px;">INPUT</div>
+              <strong style="font-size:1rem;">Text · Audio · Image</strong>
+            </div>
+            <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+            <div class="flow-item" style="background:#f5a623;border:none;border-radius:14px;padding:16px;">
+              <div style="font-size:0.75rem;color:rgba(0,0,0,0.5);margin-bottom:4px;">MODEL</div>
+              <strong style="font-size:1rem;color:#000;">Learns similarity · Computes probability</strong>
+            </div>
+            <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+            <div class="flow-item fill-green" style="border-radius:14px;padding:16px;">
+              <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:4px;">OUTPUT</div>
+              <strong style="font-size:1rem;">Label · Suggestion · Answer</strong>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+            <span class="badge amber">Exam question</span>
+            <span class="badge blue">Spam filter</span>
+            <span class="badge green">Traffic forecast</span>
+            <span class="badge">Chatbot</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. THREE PILLARS ── -->
+    <section class="slide" data-title="Three Pillars">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Build · AI's components</div>
+          <h2>Data + Statistics + Software</h2>
+        </div>
+        <div class="slide-tag">4 / 12</div>
+      </div>
+      <div class="cols c3" style="flex:1;min-height:0;">
+        <div class="card accent-top">
+          <div class="big-number">01</div>
+          <h3>Statistics</h3>
+          <p>It is the art of dealing with uncertainty. It answers the question, "How much does this example resemble what I have seen before?"</p>
+          <div class="callout">Average, spread, probability, margin of error: the mathematical spine of AI.</div>
+        </div>
+        <div class="card accent-green">
+          <div class="big-number">02</div>
+          <h3>Computer Science</h3>
+          <p>It executes the math at scale. Algorithms, data structures, and parallel processing form the engineering.</p>
+          <div class="callout">Same idea, yet across millions of examples and in seconds.</div>
+        </div>
+        <div class="card accent-blue">
+          <div class="big-number">03</div>
+          <h3>Data</h3>
+          <p>It is a copy of the world the model sees. Weak data leads to weak results; missing data blinds the model.</p>
+          <div class="callout">"Garbage in, garbage out" still rings true.</div>
+        </div>
+      </div>
+        <div style="margin-top:12px; display:flex; align-items:center; gap:14px; padding:14px 20px; background:var(--surface); border:1px solid var(--border); border-radius:14px; flex-wrap:wrap;">
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">Statistics</span>
+        <span style="color:var(--muted2);font-size:1.2rem;">+</span>
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">Computer</span>
+        <span style="color:var(--muted2);font-size:1.2rem;">+</span>
+        <span style="font-family:var(--serif);font-size:1.15rem;color:var(--muted);">Data</span>
+        <span style="color:var(--muted2);font-size:1.4rem;">=</span>
+        <span style="font-family:var(--serif);font-size:1.25rem;color:var(--accent);font-weight:700;">Working AI System</span>
+      </div>
+    </section>
+
+    <!-- ── 5. WHY DOES IT SEEM SMART ── -->
+    <section class="slide" data-title="Why Does It Seem Smart?">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Question · Why does it seem smart?</div>
+          <h2>Answer: Scale and Repetition</h2>
+        </div>
+        <div class="slide-tag">5 / 12</div>
+      </div>
+      <div class="cols c-wide" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <p style="font-size:1.05rem;color:var(--text);line-height:1.5;">The model sees more examples in seconds than any human can in a lifetime. That is why the answer can sound "wise".</p>
+          <div class="callout">Caution: seeing many examples does not equate to being truly <strong>conscious</strong>.</div>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Why it is strong:</strong> speed, repetition, scale</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div><strong>Why it is risky:</strong> it can deliver confidently wrong answers</div></div>
+          </div>
+          <div class="card fill-amber">
+            <div class="card-label">Simple rule</div>
+            <p>An impressive sentence ≠ solid reasoning.</p>
+          </div>
+        </div>
+        <div class="card" style="gap:12px;">
+          <div class="card-label">Path from training to inference</div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+            <div class="pill-item fill-amber" style="border-radius:12px;"><div class="pill-dot"></div><div><strong>Millions of examples</strong><br><span style="font-size:0.92rem;">books, images, logs</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item" style="background:#5b8ff0;border-color:#5b8ff0;border-radius:12px;"><div style="width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0;margin-top:5px;"></div><div style="color:#fff;"><strong>Training</strong><br><span style="font-size:0.92rem;opacity:0.8;">reduces mistakes · compresses structures</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item fill-green" style="border-radius:12px;"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Weights</strong><br><span style="font-size:0.92rem;">learned numbers</span></div></div>
+            <div style="text-align:center;color:var(--muted);">↓</div>
+            <div class="pill-item" style="border-radius:12px;"><div class="pill-dot" style="background:var(--red)"></div><div><strong>New query + Prediction</strong><br><span style="font-size:0.92rem;">returns the most likely answer</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 6. REASONING & DECISION ── -->
+    <section class="slide" data-title="Reasoning & Decision">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Critical Distinction · Prediction is not responsibility</div>
+          <h2>Humans Decide and Own the Outcome</h2>
+        </div>
+        <div class="slide-tag">6 / 12</div>
+      </div>
+      <div class="cols c4" style="flex:1;min-height:0;">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">1</div>
+            <h3>Frame the Question</h3>
+          </div>
+          <p>What are we aiming for? Speed, accuracy, fairness, or security?</p>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">2</div>
+            <h3>Generate a Prediction</h3>
+          </div>
+          <p>AI looks back at history to produce a likely result. <strong>This is where it excels.</strong></p>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">3</div>
+            <h3>Reason</h3>
+          </div>
+          <p>Is this answer suitable for the current situation, people involved, and the final outcome? Any side effects?</p>
+        </div>
+        <div class="card" style="border-color:var(--accent);">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <div class="step-num">4</div>
+            <h3>Decide and Own</h3>
+          </div>
+          <p>The person who signs off and carries the result is <strong>still human.</strong></p>
+        </div>
+      </div>
+      <div class="cols c2" style="margin-top:14px;">
+        <div class="card fill-amber">
+          <div class="card-label">AI's common pitfall</div>
+          <p class="highlight" style="font-size:1.2rem;">"I found a similar example, so I must know the right answer."</p>
+          <p style="font-size:0.94rem;">That approach alone is insufficient in law, medicine, or hiring.</p>
+        </div>
+        <div class="card fill-blue">
+          <div class="card-label">The human role</div>
+          <p class="highlight" style="font-size:1.2rem;">"Is the answer logical, fair, and timely?"</p>
+          <p style="font-size:0.94rem;">Reasoning contains context, values, intent, and accountability.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 7. EVERYDAY LIFE ── -->
+    <section class="slide" data-title="Everyday Life">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Application · What can I do today?</div>
+          <h2>Use AI like a co-pilot</h2>
+        </div>
+        <div class="slide-tag">7 / 12</div>
+      </div>
+      <div class="cols c3" style="flex:1;min-height:0;">
+        <div class="card">
+          <h3>📚 In lessons</h3>
+          <p>Generate summaries, ask it to sketch a study plan, challenge it to create counterarguments, and design a personalized mini quiz.</p>
+          <div class="callout">You keep the final check: see the sources, verify, build understanding.</div>
+        </div>
+        <div class="card">
+          <h3>🗂 Life organization</h3>
+          <p>Draft CVs, emails, travel plans, budgets, and meeting notes.</p>
+          <div class="callout">AI saves time; you decide which tasks to delegate.</div>
+        </div>
+        <div class="card">
+          <h3>✏️ In production</h3>
+          <p>Content, code, idea development, presentation flow, visual drafts. It lowers the start-up barrier.</p>
+          <div class="callout">Don't publish low-quality work just because it was fast. <strong>You are the editor.</strong></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:14px 20px;background:var(--surface);border:1px solid var(--accent);border-radius:16px;">
+        <strong>Best use formula:</strong> Instead of starting from scratch, have AI produce the first draft and you raise the quality. Speed + critical thinking = value creation.
+      </div>
+    </section>
+
+    <!-- ── 8. WHY STORAGE ── -->
+    <section class="slide" data-title="Data Storage">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">CTO view · Why am I talking about data storage?</div>
+          <h2>AI Starves Without Data</h2>
+        </div>
+        <div class="slide-tag">8 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <span class="badge amber">Image / Video</span>
+            <span class="badge blue">Logs / Telemetry</span>
+            <span class="badge green">Documents / PDF</span>
+            <span class="badge">Checkpoint</span>
+            <span class="badge">Embedding</span>
+            <span class="badge">Dataset Versions</span>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--surface);border:1px solid rgba(34,201,160,0.25);border-radius:18px;">
+            <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <span class="minio-logo-lg"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+              <div style="color:var(--muted2);font-size:0.94rem;">AI data layer</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="gap:16px;">
+          <h3>What Does MinIO Do?</h3>
+          <p>It is large-scale <strong>object storage</strong> software. Photos, videos, logs, training data, model checkpoints, and embeddings are kept fast and reliable.</p>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>S3-compatible access:</strong> opens data to every app with a standard language</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>High throughput:</strong> so GPUs do not wait</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--green)"></div><div><strong>Distributed architecture:</strong> scales without squeezing into a single machine</div></div>
+          </div>
+          <div class="callout">AI's fuel is not the model but <strong>data.</strong> The place where data is stored is strategic.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 9. AI FACTORIES ── -->
+    <section class="slide" data-title="AI Factories">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Ecosystem · NVIDIA, Databricks, and similar platforms</div>
+          <h2>Fast compute alone is not enough</h2>
+        </div>
+        <div class="slide-tag">9 / 12</div>
+      </div>
+      <div class="cols c-wide" style="flex:1;min-height:0;">
+        <div class="card" style="gap:12px;">
+          <div class="card-label">AI factory logic</div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+            <div class="cols c3" style="gap:8px;">
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Applications</div>
+                <p style="font-size:0.92rem;">CRM, CMS, ERP, sensörler</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Data Engineering</div>
+                <p style="font-size:0.92rem;">Databricks, Spark, ETL</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">GPU Farm</div>
+                <p style="font-size:0.92rem;">NVIDIA training/inference</p>
+              </div>
+            </div>
+            <div style="text-align:center;color:var(--muted);">↓ ↓ ↓</div>
+            <div style="padding:16px;background:rgba(34,201,160,0.08);border:1px solid rgba(34,201,160,0.25);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:14px;">
+              <span class="minio-logo"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.612 24.465"><path d="M52.751.414h9.108v23.63h-9.108zM41.711.74l-18.488 9.92a.919.919 0 0 1-.856 0L3.879.74A2.808 2.808 0 0 0 2.558.414h-.023A2.4 2.4 0 0 0 0 2.641v21.376h9.1V13.842a.918.918 0 0 1 1.385-.682l10.361 5.568a3.634 3.634 0 0 0 3.336.028l10.933-5.634a.917.917 0 0 1 1.371.69v10.205h9.1V2.641A2.4 2.4 0 0 0 43.055.414h-.023a2.808 2.808 0 0 0-1.321.326zm65.564-.326h-9.237v10.755a.913.913 0 0 1-1.338.706L72.762.675a2.824 2.824 0 0 0-1.191-.261h-.016a2.4 2.4 0 0 0-2.535 2.227v21.377h9.163V13.275a.914.914 0 0 1 1.337-.707l24.032 11.2a2.813 2.813 0 0 0 1.188.26 2.4 2.4 0 0 0 2.535-2.227zm7.161 23.63V.414h4.191v23.63zm28.856.421c-11.274 0-19.272-4.7-19.272-12.232C124.02 4.741 132.066 0 143.292 0s19.32 4.7 19.32 12.233-7.902 12.232-19.32 12.232zm0-21.333c-8.383 0-14.84 3.217-14.84 9.1 0 5.926 6.457 9.1 14.84 9.1s14.887-3.174 14.887-9.1c0-5.883-6.504-9.1-14.887-9.1z" fill="#c72c48"/></svg></span>
+              <span style="color:var(--muted2);font-size:0.94rem;">Shared Data Plane</span>
+            </div>
+            <div style="text-align:center;color:var(--muted);">↓ ↓ ↓</div>
+            <div class="cols c3" style="gap:8px;">
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Agents</div>
+                <p style="font-size:0.92rem;">workflow, automation</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">Model Versions</div>
+                <p style="font-size:0.92rem;">versioning, tracking</p>
+              </div>
+              <div class="card" style="padding:14px;gap:6px;background:var(--surface2);">
+                <div class="card-label">RAG / Retrieval</div>
+                <p style="font-size:0.92rem;">document access</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <p style="color:var(--text);font-size:1rem;line-height:1.5;">NVIDIA, Databricks, and enterprise agent stacks share one demand: <strong>data must be fast, consistent, and reliable.</strong></p>
+          <div class="pill-list">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>GPUs are expensive; delayed data wastes the investment</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>Without consistent model and dataset versions, results become irreproducible</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--red)"></div><div>Security, access, backups, and performance are required simultaneously</div></div>
+          </div>
+          <div class="callout">The shiny surface is the <strong>model</strong>; behind the scenes, <strong>data infrastructure</strong> carries the load.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 10. LIFE LESSON ── -->
+    <section class="slide" data-title="Life Lesson">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Core Message · Simplify everything</div>
+          <h2>Systems Feed Like Humans</h2>
+        </div>
+        <div class="slide-tag">10 / 12</div>
+      </div>
+      <div class="cols c2" style="flex:1;min-height:0;">
+        <div class="card fill-amber">
+          <div class="badge amber" style="width:fit-content;">For AI</div>
+          <p class="highlight">"No good data, no good result."</p>
+          <p>A model trained on flawed data builds the wrong confidence.</p>
+          <div class="pill-list" style="margin-top:8px;">
+            <div class="pill-item"><div class="pill-dot"></div><div>Define the problem first</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>Gather the right data</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>Then pick the tool</div></div>
+            <div class="pill-item"><div class="pill-dot"></div><div>Finally, judge the output with human eyes</div></div>
+          </div>
+        </div>
+        <div class="card fill-blue">
+          <div class="badge blue" style="width:fit-content;">For humans</div>
+          <p class="highlight">"No good input, no good thinking."</p>
+          <p>Your personal data set is what you read, who you spend time with, and what you repeat.</p>
+          <div class="pill-list" style="margin-top:8px;">
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Consume quality sources</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Learn to ask better questions</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Support decisions with data but stay critical</div></div>
+            <div class="pill-item"><div class="pill-dot" style="background:var(--blue)"></div><div>Pair speed with depth</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 11. CAREER START ── -->
+    <section class="slide" data-title="Career Start">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Future · What to learn at career start?</div>
+          <h2>Not Prompt Magic, but a Backbone of Skills</h2>
+        </div>
+        <div class="slide-tag">11 / 12</div>
+      </div>
+      <div class="cols c-wide-r" style="flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#000;font-weight:700;font-size:0.92rem;flex-shrink:0;">1</div>
+              <strong>Writing</strong>
+            </div>
+            <p style="font-size:0.94rem;">Clarifies your thinking and strengthens communication with AI</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:grid;place-items:center;color:#000;font-weight:700;font-size:0.92rem;flex-shrink:0;">2</div>
+              <strong>Core Data</strong>
+            </div>
+            <p style="font-size:0.94rem;">Reading tables, charts, probabilities, and margins of error</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">3</div>
+              <strong>Some Code</strong>
+            </div>
+            <p style="font-size:0.94rem;">Enough to build automation</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">4</div>
+              <strong>Domain Knowledge</strong>
+            </div>
+            <p style="font-size:0.94rem;">Health, finance, law, media — whichever industry it is</p>
+          </div>
+          <div class="card" style="padding:16px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--muted);display:grid;place-items:center;color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;">5</div>
+              <strong>Integrating AI into Workflows</strong>
+            </div>
+            <p style="font-size:0.94rem;">Note-taking, summarizing, drafting, researching</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <p style="font-size:1.05rem;color:var(--text);line-height:1.5;">Let your skill base stay even if tools change. It prepares you for not just today, but the next <strong>10 years</strong> of work.</p>
+          <div class="callout" style="font-size:1rem;">A valuable worker is not just someone using AI; it is someone building better systems with it.</div>
+          <div class="card fill-green">
+            <div class="card-label">12-Month Learning Backbone</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="badge amber">Writing</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge green">Data</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge blue">Code</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge">Domain knowledge</span>
+              <span style="color:var(--muted);">→</span>
+              <span class="badge amber">AI mastery</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 12. CLOSING ── -->
+    <section class="slide" data-title="Closing">
+      <div class="slide-header">
+        <div>
+          <div class="eyebrow">Closing · Return to the basics, then look ahead</div>
+          <h2>Why Artificial Intelligence Matters to Your Future</h2>
+        </div>
+        <div class="slide-tag">12 / 12</div>
+      </div>
+      <div class="closing-cards" style="flex:1;min-height:0;">
+        <div class="card fill-amber">
+          <h3>1. Because it will touch every industry</h3>
+          <p>AI is not just for tech companies; health, finance, media, manufacturing, and education are all changing.</p>
+        </div>
+        <div class="card fill-green">
+          <h3>2. Because early learners will have the advantage</h3>
+          <p>Someone experimenting today could be building and leading teams tomorrow.</p>
+        </div>
+        <div class="card fill-blue">
+          <h3>3. Because core skills will become more valuable</h3>
+          <p>Asking questions, verifying, writing, framing context, and owning outcomes will grow in importance.</p>
+        </div>
+        <div class="card" style="border-color:rgba(245,96,96,0.3);background:rgba(245,96,96,0.06);">
+          <h3>4. Because data is the new infrastructure</h3>
+          <p>Models steal the spotlight when we talk about AI; in reality, <strong>data-platforms</strong> sit at the heart of the game.</p>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+        <p class="highlight" style="font-size:1.1rem;color:var(--text);">AI will not build the future for you. Those who use it wisely will move faster.</p>
+        <div style="font-family:var(--serif);font-size:1.1rem;color:var(--muted);white-space:nowrap;">Thank you 🙏</div>
+      </div>
+    </section>
+
+  </div><!-- /deck -->
+
+  <nav class="nav">
+    <div class="nav-left" id="slideLabel">Opening</div>
+    <div class="nav-right">
+      <button id="prev" type="button">← Back</button>
+      <div class="counter" id="counter">1 / 12</div>
+      <button id="next" type="button" class="primary">Next →</button>
+    </div>
+  </nav>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const prog = document.getElementById('prog');
+const counter = document.getElementById('counter');
+const label = document.getElementById('slideLabel');
+const prev = document.getElementById('prev');
+const next = document.getElementById('next');
+let cur = 0;
+
+function go(n) {
+  cur = Math.max(0, Math.min(n, slides.length - 1));
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === cur);
+  });
+  prog.style.width = ((cur + 1) / slides.length * 100) + '%';
+  counter.textContent = (cur + 1) + ' / ' + slides.length;
+  label.textContent = slides[cur].dataset.title || '';
+  prev.disabled = cur === 0;
+  next.disabled = cur === slides.length - 1;
+  document.title = (slides[cur].dataset.title || 'RYLA') + ' | AI 2026';
+}
+
+next.addEventListener('click', () => go(cur + 1));
+prev.addEventListener('click', () => go(cur - 1));
+
+document.addEventListener('keydown', e => {
+  if ([' ', 'ArrowRight', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  if (e.key === 'Home') go(0);
+  if (e.key === 'End') go(slides.length - 1);
+});
+
+// Swipe support
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+});
+
+go(0);
+</script>
+</body>
+</html>
