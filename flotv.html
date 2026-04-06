@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FloatTV • YouTube Float Walls</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15"></script>
+  <style>
+    :root { --bg:#030712; --panel:#0f172a; --accent:#38bdf8; --text:#f8fafc; --muted:#a5b1c8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter",system-ui,-apple-system;background:linear-gradient(180deg,#030712,#0b1120);color:var(--text);min-height:100vh;display:flex;}
+    .layout{width:100%;display:grid;grid-template-columns:minmax(130px,10vw) 1fr;gap:14px;padding:20px;height:100vh;}
+    .sidebar{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;box-shadow:0 18px 35px rgba(2,6,23,.8);display:flex;flex-direction:column;gap:14px;max-width:100%;overflow:hidden;}
+    .sidebar-header h1{margin:0;font-size:1.4rem;}
+    .sidebar-header p{margin:4px 0 0;color:var(--muted);font-size:.85rem;line-height:1.4;}
+    .controls{display:flex;flex-direction:column;gap:8px;}
+    input,button{font:inherit;border-radius:999px;border:1px solid rgba(255,255,255,.25);padding:8px 14px;background:rgba(15,23,42,.7);color:var(--text);}
+    button{cursor:pointer;border:none;background:var(--accent);font-weight:600;}
+    button.secondary{background:rgba(255,255,255,.12);}
+    #canvas{position:relative;background:rgba(0,0,0,.35);border-radius:18px;border:1px solid rgba(255,255,255,.1);overflow:hidden;min-height:0;}
+    .float-window{position:absolute;width:360px;height:230px;border-radius:16px;background:#02040c;border:1px solid rgba(255,255,255,.15);box-shadow:0 20px 45px rgba(2,6,23,.85);display:flex;flex-direction:column;margin:0;}
+    .float-window header{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:move;gap:6px;border-bottom:1px solid rgba(255,255,255,.05);}
+    .media-frame,.media-video{flex:1;width:100%;height:100%;border:none;border-bottom-left-radius:16px;border-bottom-right-radius:16px;background:#000;}
+    .media-wrap{position:relative;display:flex;flex:1;min-height:0;}
+    .media-wrap::after{
+      content:"";
+      position:absolute;
+      inset:auto 10px 10px auto;
+      width:14px;
+      height:14px;
+      background:
+        linear-gradient(135deg, transparent 0 42%, rgba(255,255,255,.4) 42% 50%, transparent 50% 58%, rgba(255,255,255,.4) 58% 66%, transparent 66% 100%);
+      pointer-events:none;
+      opacity:.65;
+    }
+    .actions button{background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;font-size:.7rem;color:#fff;font-weight:600;}
+    .panel-title{display:flex;align-items:center;gap:8px;min-width:0;}
+    .panel-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+    .status-badge,.delay-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      font-size:.68rem;
+      font-weight:700;
+      border-radius:999px;
+      padding:3px 8px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .status-badge.live{background:rgba(251,113,133,.18);color:#fecdd3;}
+    .status-badge.ready{background:rgba(56,189,248,.16);color:#bae6fd;}
+    .status-badge.loading{background:rgba(250,204,21,.14);color:#fef08a;}
+    .status-badge.error{background:rgba(248,113,113,.16);color:#fecaca;}
+    .status-badge.embed{background:rgba(148,163,184,.16);color:#e2e8f0;}
+    .delay-badge{background:rgba(255,255,255,.08);color:#cbd5e1;}
+    .live-sync-btn{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      border-radius:999px;
+      padding:3px 9px;
+      background:rgba(56,189,248,.18);
+      color:#dff6ff;
+      font-size:.68rem;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .live-sync-btn.visible{display:inline-flex;}
+    .resize-handle{
+      position:absolute;
+      width:24px;
+      height:24px;
+      bottom:0;
+      right:0;
+      cursor:se-resize;
+      background:transparent;
+    }
+    .legend{display:flex;flex-direction:column;gap:10px;font-size:.82rem;color:var(--muted);}
+    .legend span{display:flex;align-items:center;gap:6px;}
+    .legend .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#f43f5e,#8b5cf6);}
+    .debug-panel{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(3,7,18,.82);
+      backdrop-filter:blur(10px);
+      box-shadow:0 10px 24px rgba(0,0,0,.28);
+      font-size:.68rem;
+      line-height:1.35;
+      color:#cbd5e1;
+    }
+    .debug-title{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:6px;
+      font-size:.72rem;
+      font-weight:700;
+      color:#f8fafc;
+    }
+    .debug-grid{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:3px 8px;
+    }
+    .debug-grid b{color:#94a3b8;font-weight:700;}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>FloatTV • YouTube Channel Floats</h1>
+        <p>Drop in any YouTube channel and keep it visible above your workspace. Drag, resize, and stack channels while the rest of the screen stays free.</p>
+      </div>
+      <div class="controls">
+        <input id="sourceUrl" placeholder="https://www.youtube.com/channel/UC..." />
+        <button id="floatBtn">Float Channel</button>
+        <button id="stackBtn" class="secondary">Stack Tiles</button>
+        <button id="fitBtn" class="secondary">Fit Max</button>
+        <button id="clearBtn" class="secondary">Clear All</button>
+      </div>
+      <div class="legend">
+        <span><span class="dot"></span> Drag header to move</span>
+        <span><span class="dot" style="background:linear-gradient(135deg,#22c55e,#0ea5e9);"></span> Drag bottom right to resize</span>
+      </div>
+      <section class="debug-panel" id="debugPanel">
+        <div class="debug-title">
+          <span>Debug</span>
+          <span id="debugPanelId">No panel</span>
+        </div>
+        <div class="debug-grid" id="debugGrid">
+          <b>Status</b><span>Idle</span>
+        </div>
+      </section>
+    </aside>
+    <main id="canvas"></main>
+  </div>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const floatBtn = document.getElementById('floatBtn');
+    const sourceUrl = document.getElementById('sourceUrl');
+    const stackBtn = document.getElementById('stackBtn');
+    const fitBtn = document.getElementById('fitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const debugPanelId = document.getElementById('debugPanelId');
+    const debugGrid = document.getElementById('debugGrid');
+    let nextId = 1;
+    const HEADER_HEIGHT = 42;
+    const TILE_GAP = 12;
+    const MIN_TILE_WIDTH = 180;
+    const MIN_TILE_HEIGHT = 140;
+    const LIVE_RESYNC_THRESHOLD = 150;
+    let debugTargetPanelId = null;
+    const panelState = new Map();
+    const withPlaybackParams = (url) => {
+      if (!url) return '';
+      const joiner = url.includes('?') ? '&' : '?';
+      return `${url}${joiner}autoplay=1&mute=1&playsinline=1`;
+    };
+
+    const classifySource = (raw) => {
+      if (!raw) return '';
+      let url = raw.trim();
+      const lower = url.toLowerCase();
+      if (url.includes('youtube.com')) {
+        if (url.includes('channel/')) {
+          const id = url.split('/channel/')[1].split(/\?|&/)[0];
+          return {
+            kind: 'iframe',
+            url: withPlaybackParams(`https://www.youtube.com/embed/live_stream?channel=${id}`),
+            label: `YouTube ${nextId}`
+          };
+        }
+        if (url.includes('watch')) {
+          const params = new URL(url).searchParams;
+          const v = params.get('v');
+          if (v) {
+            return {
+              kind: 'iframe',
+              url: withPlaybackParams(`https://www.youtube.com/embed/${v}`),
+              label: `YouTube ${nextId}`
+            };
+          }
+        }
+      }
+      if (lower.includes('youtube.com/embed/')) {
+        return { kind: 'iframe', url: withPlaybackParams(url), label: `YouTube ${nextId}` };
+      }
+      if (lower.endsWith('.m3u8') || lower.includes('.m3u8?')) {
+        return { kind: 'hls', url, label: `Channel ${nextId}` };
+      }
+      if (/\.(mp4|webm|mkv|mov)(\?|$)/i.test(lower)) {
+        return { kind: 'video', url, label: `Channel ${nextId}` };
+      }
+      return { kind: 'iframe', url: withPlaybackParams(url), label: `Channel ${nextId}` };
+    };
+
+    const updatePanelStatus = (panel, tone, text) => {
+      const badge = panel.querySelector('[data-status]');
+      if (!badge) return;
+      badge.className = `status-badge ${tone}`;
+      badge.textContent = text;
+    };
+
+    const setPanelDiagnostic = (panel, text) => {
+      if (!panel) return;
+      panel.dataset.diagnostic = text || '';
+    };
+
+    const setPanelMode = (panel, text) => {
+      if (!panel) return;
+      panel.dataset.mode = text || 'Unknown';
+    };
+
+    const setPanelStreamType = (panel, text) => {
+      if (!panel) return;
+      panel.dataset.streamType = text || 'Unknown';
+    };
+
+    const updatePanelDelay = (panel, seconds) => {
+      const badge = panel.querySelector('[data-delay]');
+      if (!badge) return;
+      if (!Number.isFinite(seconds)) {
+        badge.textContent = 'LIVE';
+        return;
+      }
+      const value = Math.max(0, Math.round(seconds));
+      badge.textContent = value <= 2 ? 'LIVE' : `-${value} sec`;
+    };
+
+    const updateLiveSyncButton = (panel, seconds) => {
+      const btn = panel.querySelector('[data-live-sync]');
+      if (!btn) return;
+      if (Number.isFinite(seconds) && seconds >= LIVE_RESYNC_THRESHOLD) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    };
+
+    const setDebugRows = (rows) => {
+      debugGrid.innerHTML = rows.map(([label, value]) => `<b>${label}</b><span>${value}</span>`).join('');
+    };
+
+    const getMediaErrorText = (media) => {
+      if (!media || !media.error) return 'None';
+      const code = media.error.code;
+      if (code === 1) return 'Aborted';
+      if (code === 2) return 'Network';
+      if (code === 3) return 'Decode';
+      if (code === 4) return 'Unsupported';
+      return `Code ${code}`;
+    };
+
+    const refreshDebugPanel = () => {
+      const panel = debugTargetPanelId ? document.querySelector(`.float-window[data-id="${debugTargetPanelId}"]`) : null;
+      if (!panel) {
+        debugPanelId.textContent = 'No panel';
+        setDebugRows([['Status', 'Idle']]);
+        return;
+      }
+      debugPanelId.textContent = panel.querySelector('.panel-name')?.textContent || `Panel ${debugTargetPanelId}`;
+      const media = panel.querySelector('video, iframe');
+      if (!media) {
+        setDebugRows([['Status', 'No media']]);
+        return;
+      }
+      if (media.tagName === 'IFRAME') {
+        setDebugRows([
+          ['Type', 'Embed'],
+          ['Status', panel.querySelector('[data-status]')?.textContent || 'Embed'],
+          ['Delay', panel.querySelector('[data-delay]')?.textContent || 'LIVE'],
+          ['Src', media.src.slice(0, 44) + (media.src.length > 44 ? '...' : '')]
+        ]);
+        return;
+      }
+      const rows = [
+        ['Type', panel.dataset.streamType || 'Direct video'],
+        ['Mode', panel.dataset.mode || 'Unknown'],
+        ['Status', panel.querySelector('[data-status]')?.textContent || 'Unknown'],
+        ['Delay', panel.querySelector('[data-delay]')?.textContent || 'LIVE'],
+        ['Paused', media.paused ? 'Yes' : 'No'],
+        ['Muted', media.muted ? 'Yes' : 'No'],
+        ['Ready', String(media.readyState)],
+        ['Network', String(media.networkState)],
+        ['Time', Number.isFinite(media.currentTime) ? media.currentTime.toFixed(1) : '0.0'],
+        ['Error', getMediaErrorText(media)],
+        ['Diag', panel.dataset.diagnostic || 'None']
+      ];
+      setDebugRows(rows);
+    };
+
+    const measureLiveDelay = (video) => {
+      if (!video || !video.seekable || video.seekable.length === 0) return NaN;
+      const edge = video.seekable.end(video.seekable.length - 1);
+      return edge - video.currentTime;
+    };
+
+    const attachVideoStatusLoop = (panel, video) => {
+      const tick = () => {
+        if (!document.body.contains(panel)) return;
+        const lag = measureLiveDelay(video);
+        if (Number.isFinite(lag)) {
+          updatePanelDelay(panel, lag);
+          updateLiveSyncButton(panel, lag);
+          updatePanelStatus(panel, lag <= 8 ? 'live' : 'ready', lag <= 8 ? 'Live' : 'Playing');
+        } else if (!video.paused && !video.ended) {
+          updatePanelDelay(panel, 0);
+          updateLiveSyncButton(panel, 0);
+          updatePanelStatus(panel, 'ready', 'Playing');
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const syncVideoToLive = async (panel, video) => {
+      if (!video || !video.seekable || video.seekable.length === 0) return;
+      const edge = video.seekable.end(video.seekable.length - 1);
+      video.currentTime = Math.max(0, edge - 1);
+      setPanelDiagnostic(panel, 'manual live sync');
+      updatePanelDelay(panel, 0);
+      updateLiveSyncButton(panel, 0);
+      tryAutoplay(video, panel);
+    };
+
+    const isSafariLike = () => {
+      const ua = navigator.userAgent;
+      return /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Android/i.test(ua);
+    };
+
+    const tryAutoplay = async (video, panel) => {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      try {
+        await video.play();
+        setPanelDiagnostic(panel, 'play() resolved');
+        updatePanelStatus(panel, 'loading', 'Starting');
+      } catch (err) {
+        setPanelDiagnostic(panel, err && err.name ? err.name : 'play() rejected');
+        updatePanelStatus(panel, 'error', 'Blocked');
+      }
+    };
+
+    const destroyPanelState = (panel) => {
+      const state = panelState.get(panel.dataset.id);
+      if (state && state.hls) state.hls.destroy();
+      panelState.delete(panel.dataset.id);
+    };
+
+    const mountHlsJs = (panel, source, video) => {
+      if (!(window.Hls && window.Hls.isSupported())) {
+        setPanelMode(panel, 'Unsupported');
+        setPanelDiagnostic(panel, 'hls.js unsupported');
+        updatePanelStatus(panel, 'error', 'Unsupported');
+        return;
+      }
+      destroyPanelState(panel);
+      setPanelMode(panel, 'HLS.js');
+      setPanelDiagnostic(panel, 'hls.js attach');
+      const hls = new Hls({
+        lowLatencyMode: true,
+        backBufferLength: 30,
+        maxLiveSyncPlaybackRate: 1.5
+      });
+      panelState.set(panel.dataset.id, { hls });
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        hls.loadSource(source.url);
+      });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setPanelDiagnostic(panel, 'manifest parsed');
+        tryAutoplay(video, panel);
+      });
+      hls.on(Hls.Events.LEVEL_LOADED, (_, data) => {
+        if (data && data.details && data.details.live) {
+          updatePanelStatus(panel, 'live', 'Live');
+        }
+      });
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data && data.details) setPanelDiagnostic(panel, data.details);
+        if (data && data.fatal) updatePanelStatus(panel, 'error', 'Error');
+      });
+    };
+
+    const initializeDirectMedia = (panel, source, video) => {
+      video.src = source.kind === 'video' ? source.url : '';
+      video.controls = false;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.crossOrigin = 'anonymous';
+      updatePanelStatus(panel, 'loading', 'Connecting');
+      setPanelDiagnostic(panel, 'waiting for metadata');
+      setPanelMode(panel, source.kind === 'video' ? 'Direct' : 'Unknown');
+      setPanelStreamType(panel, source.kind === 'hls' ? 'HLS stream' : 'Direct video');
+
+      if (source.kind === 'hls') {
+        if (isSafariLike()) {
+          setPanelMode(panel, 'Native HLS');
+          setPanelDiagnostic(panel, 'native hls');
+          video.src = source.url;
+        } else {
+          mountHlsJs(panel, source, video);
+        }
+      }
+
+      video.addEventListener('loadedmetadata', () => tryAutoplay(video, panel), { once: true });
+      video.addEventListener('canplay', () => {
+        if (video.paused) tryAutoplay(video, panel);
+      });
+      video.addEventListener('playing', () => updatePanelStatus(panel, 'ready', 'Playing'));
+      video.addEventListener('waiting', () => updatePanelStatus(panel, 'loading', 'Buffering'));
+      video.addEventListener('stalled', () => updatePanelStatus(panel, 'loading', 'Buffering'));
+      video.addEventListener('error', () => {
+        setPanelDiagnostic(panel, `media error ${getMediaErrorText(video)}`);
+        updatePanelStatus(panel, 'error', 'Error');
+      });
+      attachVideoStatusLoop(panel, video);
+      if (source.kind === 'video') tryAutoplay(video, panel);
+    };
+
+    const createPanel = (source) => {
+      if (!source || !source.url) return;
+      const panel = document.createElement('div');
+      panel.className = 'float-window';
+      panel.dataset.id = nextId++;
+      panel.innerHTML = `
+        <header>
+          <div class="panel-title">
+            <span class="panel-name">${source.label}</span>
+            <span class="status-badge loading" data-status>Loading</span>
+            <span class="delay-badge" data-delay>Delay n/a</span>
+            <button class="live-sync-btn" type="button" data-live-sync>Live</button>
+          </div>
+          <div class="actions"><button data-hide>Hide</button><button data-full>↑</button></div>
+        </header>
+        <div class="media-wrap"></div>
+        <div class="resize-handle" draggable="false"></div>
+      `;
+      const mediaWrap = panel.querySelector('.media-wrap');
+      if (source.kind === 'iframe') {
+        const frame = document.createElement('iframe');
+        frame.className = 'media-frame';
+        frame.src = source.url;
+        frame.allow = 'autoplay; encrypted-media; picture-in-picture';
+        frame.sandbox = 'allow-same-origin allow-scripts allow-popups';
+        mediaWrap.appendChild(frame);
+        updatePanelStatus(panel, 'embed', 'Embed');
+        updatePanelDelay(panel, NaN);
+      } else {
+        const video = document.createElement('video');
+        video.className = 'media-video';
+        mediaWrap.appendChild(video);
+        initializeDirectMedia(panel, source, video);
+      }
+      attachEvents(panel);
+      canvas.appendChild(panel);
+      panel.style.top = `${40 + Math.random() * 120}px`;
+      panel.style.left = `${40 + Math.random() * 120}px`;
+      debugTargetPanelId = panel.dataset.id;
+      refreshDebugPanel();
+    };
+
+    const fitPanelsToCanvas = () => {
+      const panels = [...canvas.querySelectorAll('.float-window')];
+      if (!panels.length) return;
+
+      const availableWidth = Math.max(320, canvas.clientWidth - TILE_GAP * 2);
+      const availableHeight = Math.max(220, canvas.clientHeight - TILE_GAP * 2);
+      let best = null;
+
+      for (let cols = 1; cols <= panels.length; cols += 1) {
+        const rows = Math.ceil(panels.length / cols);
+        const slotWidth = (availableWidth - TILE_GAP * (cols - 1)) / cols;
+        const slotHeight = (availableHeight - TILE_GAP * (rows - 1)) / rows;
+        if (slotWidth <= 0 || slotHeight <= 0) continue;
+
+        const widthFromHeight = Math.max(1, (slotHeight - HEADER_HEIGHT) * (16 / 9));
+        const panelWidth = Math.floor(Math.min(slotWidth, widthFromHeight));
+        const panelHeight = Math.floor(panelWidth * (9 / 16) + HEADER_HEIGHT);
+        if (panelWidth < MIN_TILE_WIDTH || panelHeight < MIN_TILE_HEIGHT) continue;
+
+        const usedWidth = cols * panelWidth + (cols - 1) * TILE_GAP;
+        const usedHeight = rows * panelHeight + (rows - 1) * TILE_GAP;
+        if (usedWidth > availableWidth || usedHeight > availableHeight) continue;
+
+        const score = panelWidth * panelHeight;
+        if (!best || score > best.score) {
+          best = { cols, rows, panelWidth, panelHeight, score };
+        }
+      }
+
+      if (!best) return;
+
+      const gridWidth = best.cols * best.panelWidth + (best.cols - 1) * TILE_GAP;
+      const gridHeight = best.rows * best.panelHeight + (best.rows - 1) * TILE_GAP;
+      const offsetX = Math.max(TILE_GAP, Math.floor((canvas.clientWidth - gridWidth) / 2));
+      const offsetY = Math.max(TILE_GAP, Math.floor((canvas.clientHeight - gridHeight) / 2));
+
+      panels.forEach((panel, index) => {
+        const col = index % best.cols;
+        const row = Math.floor(index / best.cols);
+        panel.style.width = `${best.panelWidth}px`;
+        panel.style.height = `${best.panelHeight}px`;
+        panel.style.left = `${offsetX + col * (best.panelWidth + TILE_GAP)}px`;
+        panel.style.top = `${offsetY + row * (best.panelHeight + TILE_GAP)}px`;
+      });
+    };
+
+    const attachEvents = (panel) => {
+      const header = panel.querySelector('header');
+      panel.addEventListener('pointerdown', () => {
+        debugTargetPanelId = panel.dataset.id;
+        refreshDebugPanel();
+      });
+      let offsetX, offsetY;
+      header.addEventListener('pointerdown', (e) => {
+        offsetX = e.clientX - panel.offsetLeft;
+        offsetY = e.clientY - panel.offsetTop;
+        document.body.style.cursor = 'grabbing';
+        const move = (ev) => {
+          panel.style.left = `${Math.min(canvas.clientWidth - panel.offsetWidth, Math.max(0, ev.clientX - offsetX))}px`;
+          panel.style.top = `${Math.min(canvas.clientHeight - panel.offsetHeight, Math.max(0, ev.clientY - offsetY))}px`;
+        };
+        const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.body.style.cursor=''; };
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+      });
+
+      panel.querySelector('[data-hide]').addEventListener('click', () => {
+        const wasDebugTarget = debugTargetPanelId === panel.dataset.id;
+        destroyPanelState(panel);
+        panel.remove();
+        if (wasDebugTarget) {
+          const last = [...document.querySelectorAll('.float-window')].pop();
+          debugTargetPanelId = last ? last.dataset.id : null;
+          refreshDebugPanel();
+        }
+      });
+      panel.querySelector('[data-full]').addEventListener('click', () => panel.classList.toggle('fullscreen-mode'));
+      const liveSyncBtn = panel.querySelector('[data-live-sync]');
+      if (liveSyncBtn) {
+        liveSyncBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const video = panel.querySelector('video');
+          if (video) syncVideoToLive(panel, video);
+        });
+      }
+
+      const handle = panel.querySelector('.resize-handle');
+      let startWidth, startHeight, startX, startY;
+      handle.addEventListener('pointerdown', (e) => {
+        startWidth = panel.offsetWidth;
+        startHeight = panel.offsetHeight;
+        startX = e.clientX;
+        startY = e.clientY;
+        document.body.style.cursor = 'se-resize';
+        const move = (ev) => {
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          panel.style.width = `${Math.max(220, startWidth + dx)}px`;
+          panel.style.height = `${Math.max(150, startHeight + dy)}px`;
+        };
+        const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.body.style.cursor=''; };
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+        e.stopPropagation();
+      });
+    };
+
+    floatBtn.addEventListener('click', () => createPanel(classifySource(sourceUrl.value)));
+    clearBtn.addEventListener('click', () => {
+      canvas.querySelectorAll('.float-window').forEach(node => {
+        destroyPanelState(node);
+        node.remove();
+      });
+      debugTargetPanelId = null;
+      refreshDebugPanel();
+    });
+    stackBtn.addEventListener('click', () => {
+      let y = 30;
+      canvas.querySelectorAll('.float-window').forEach(panel => {
+        panel.style.top = `${y}px`;
+        panel.style.left = `calc(50% - ${panel.offsetWidth / 2}px)`;
+        y += 60;
+      });
+    });
+    fitBtn.addEventListener('click', fitPanelsToCanvas);
+    setInterval(refreshDebugPanel, 700);
+    refreshDebugPanel();
+  </script>
+</body>
+</html>

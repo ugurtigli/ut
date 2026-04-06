@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FloatTV Documentation</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0f172a;
+      --panel-2: #111c33;
+      --line: rgba(255,255,255,.1);
+      --text: #ecf3ff;
+      --muted: #9fb0cc;
+      --accent: #38bdf8;
+      --accent-2: #fb7185;
+      --shadow: 0 18px 40px rgba(2, 6, 23, .45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(251,113,133,.1), transparent 24%),
+        linear-gradient(180deg, #040914, var(--bg));
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, rgba(17,28,51,.95), rgba(10,17,31,.95));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      line-height: 1.15;
+    }
+
+    .sub {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,.04);
+      color: #d8e7ff;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(17,28,51,.92), rgba(10,17,31,.92));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+    }
+
+    p, li {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: .93rem;
+    }
+
+    ul, ol {
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    code {
+      background: rgba(56,189,248,.12);
+      border: 1px solid rgba(56,189,248,.18);
+      border-radius: 6px;
+      padding: 1px 6px;
+      color: #dff6ff;
+    }
+
+    .accent {
+      color: #fdd2db;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>FloatTV Documentation</h1>
+      <p class="sub">
+        This page documents the current `flotv.html` build, the UI changes made during iteration, and the expected usage flow for floating video panels.
+      </p>
+      <div class="chips">
+        <span class="chip">File: flotv.html</span>
+        <span class="chip">Primary use: floating video panels</span>
+        <span class="chip">Current source mode: embed/live links</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>What Changed</h2>
+        <ul>
+          <li>The top hero section was converted into a narrow left sidebar so the canvas gets nearly the full screen width.</li>
+          <li>The sidebar now holds the title, URL input, `Float Channel`, `Stack Tiles`, and `Clear All` controls.</li>
+          <li>A `Fit Max` button was added to pack as many floating channels into the canvas as the available space allows.</li>
+          <li>Floating windows remain draggable and resizable, but the page now prioritizes workspace area over controls.</li>
+          <li>The stray literal <code>EOF</code> text accidentally written into the page was removed.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Playback Behavior</h2>
+        <ul>
+          <li>Clicking `Float Channel` now appends playback parameters so the panel attempts <code>autoplay=1</code>, <code>mute=1</code>, and <code>playsinline=1</code>.</li>
+          <li>Direct video and HLS sources use a real browser video element so mute, autoplay, ready state, and stream delay can be observed directly.</li>
+          <li>The iframe allow list was expanded to include autoplay and picture-in-picture behavior.</li>
+          <li>The delay badge now shows <code>LIVE</code> near the live edge and values such as <code>-10 sec</code> when the stream is behind.</li>
+          <li>Autoplay still depends on the provider and browser policy; some sources will ignore it or block playback.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>How To Use FloatTV</h2>
+      <ol>
+        <li>Open `flotv.html` in the browser.</li>
+        <li>Paste a supported embed-capable stream or channel URL into the sidebar input.</li>
+        <li>Click `Float Channel` to create a new floating panel.</li>
+        <li>Drag the panel header to move it around the canvas.</li>
+        <li>Drag the bottom-right resize handle to change the panel size.</li>
+        <li>Use `Stack Tiles` to gather all active panels into a centered stack.</li>
+        <li>Use `Hide` on a panel to remove just that one, or `Clear All` to reset the canvas.</li>
+      </ol>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Supported Inputs</h2>
+        <ul>
+          <li>YouTube channel URLs using the <code>/channel/</code> format are converted to the live stream embed pattern.</li>
+          <li>YouTube watch URLs with a <code>v=</code> parameter are converted into embed URLs.</li>
+          <li>Direct <code>.m3u8</code> links are treated as HLS streams and routed through browser-aware playback logic.</li>
+          <li>Direct embed links and other raw URLs are passed through with autoplay/mute parameters appended.</li>
+          <li>If the upstream provider blocks embedding, the panel will still render but playback may fail.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Known Limits</h2>
+        <ul>
+          <li>Some YouTube videos and channels reject embedding or autoplay because of origin, policy, or player restrictions.</li>
+          <li>The fullscreen toggle button currently only toggles a class and does not yet apply a dedicated fullscreen layout.</li>
+          <li>Panels do not persist between reloads yet.</li>
+          <li>Live delay and status are reliable for direct video/HLS playback, but iframe-based providers still expose limited runtime state.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>Issue Resolution Log</h2>
+      <ul>
+        <li>The TRT World stream issue exposed a browser mismatch: direct native HLS playback returned `Unsupported` on non-Safari browsers.</li>
+        <li>A temporary fallback path was tried, then reverted when it broke a previously working stream path.</li>
+        <li>The final fix uses browser-aware routing: Safari-like browsers use native HLS, while Chrome/Edge-style browsers use <code>hls.js</code> for <code>.m3u8</code> streams.</li>
+        <li>The debug panel was added first as a canvas overlay, then moved into the left sidebar so the canvas stayed clean while diagnostics remained visible.</li>
+        <li>The debug output now includes source type, mode, status, delay, paused/muted state, ready/network state, current time, media error, and diagnostic text.</li>
+      </ul>
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>Implementation Notes</h2>
+      <ul>
+        <li>The page uses a two-column layout: a constrained sidebar on the left and a large relative-positioned canvas on the right.</li>
+        <li>Each floating panel is an absolutely positioned DOM node with a draggable header and resize handle.</li>
+        <li>URL conversion is handled in JavaScript before the player is created, so playback flags and source classification are injected centrally.</li>
+        <li>HLS playback is now browser-aware: native in Safari-like browsers and <code>hls.js</code> in non-Safari browsers.</li>
+        <li>The current implementation favors lightweight provider handling while exposing enough diagnostics to troubleshoot stream issues quickly.</li>
+      </ul>
+    </section>
+
+    <p class="footer">Update this document when FloatTV behavior, supported sources, or controls change.</p>
+  </main>
+</body>
+</html>

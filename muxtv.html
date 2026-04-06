@@ -23,7 +23,20 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
-    }
+  }
+
+  function formatSeconds(value) {
+    return `${Math.max(0, Math.round(value))}s`;
+  }
+
+  function updateLiveBadge(videoId, behindSeconds) {
+    const panel = document.querySelector(`.stream-panel[data-video-id="${videoId}"]`);
+    if (!panel) return;
+    const badge = panel.querySelector('.live-badge');
+    if (!badge) return;
+    const behind = typeof behindSeconds === 'number' ? Math.max(0, behindSeconds) : 0;
+    badge.textContent = `Live · ${formatSeconds(behind)} behind`;
+  }
     .stream-panel:hover .panel-overlay { opacity: 1; }
 
     /* Gentle close button */
@@ -85,6 +98,22 @@
       background: rgba(255,255,255,0.3);
       color: #fff;
       transform: scale(1.1);
+    }
+    .live-badge {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(236, 72, 153, 0.95));
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 12;
     }
 
     /* Hide control panel in fullscreen */
@@ -281,6 +310,7 @@
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
           console.log('✅ Manifest parsed, starting playback');
           video.play().catch(e => console.log('Autoplay prevented:', e));
+          updateLiveBadge(videoId, hls.liveSyncPosition ? 0 : (hls.latency || 0));
         });
 
         hls.on(Hls.Events.ERROR, function(event, data) {
@@ -383,6 +413,8 @@
         if (video.paused) {
           video.play().catch(e => console.log('Play prevented:', e));
         }
+        const behind = hls.liveSyncPosition ? Math.max(0, (hls.liveSyncPosition - video.currentTime)) : (hls.latency || 0);
+        updateLiveBadge(videoId, behind);
       }
     }
 
@@ -396,6 +428,9 @@
       hlsInstances.forEach((hls, videoId) => {
         const video = document.getElementById(videoId);
         if (!video) return;
+
+        const behind = hls.liveSyncPosition ? Math.max(0, hls.liveSyncPosition - video.currentTime) : (hls.latency || 0);
+        updateLiveBadge(videoId, behind);
 
         // Check if stream is paused or stalled
         if (video.paused || video.readyState < 2) {
@@ -621,6 +656,7 @@
       panel.innerHTML = `
         ${content}
         <div class="panel-overlay"></div>
+        <div class="live-badge" data-live-id="${panel.dataset.videoId || ''}">Live · 0s behind</div>
         <button class="fullscreen-btn" onclick="togglePanelFullscreen(this.parentElement)" title="Fullscreen">⛶</button>
         <button class="close-btn" onclick="removePanel(this.parentElement)" title="Remove">×</button>
       `;
